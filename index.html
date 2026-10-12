@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#f4f5fb" />
+  <meta name="description" content="Трекер привычек: недельная сетка, серии, прогресс. Данные хранятся в браузере." />
+  <title>Habit Tracker — трекер привычек</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>✅</text></svg>" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <noscript>
+    <p class="noscript">Для работы трекера включите JavaScript в браузере.</p>
+  </noscript>
+
+  <header class="topbar">
+    <div class="topbar__inner">
+      <div class="brand">
+        <span class="brand__mark" aria-hidden="true">✓</span>
+        <div class="brand__text">
+          <span class="brand__title">Habit Tracker</span>
+          <span class="brand__subtitle">Маленькие шаги каждый день</span>
+        </div>
+      </div>
+      <button type="button" class="btn btn--primary" id="addHabitBtn">
+        <span aria-hidden="true">＋</span> Добавить привычку
+      </button>
+    </div>
+  </header>
+
+  <main class="container">
+    <!-- Панель управления: навигация по неделям, фильтры, статистика -->
+    <section class="board" id="board" hidden>
+      <div class="panel toolbar">
+        <div class="week-nav">
+          <button type="button" class="icon-btn" id="prevWeek" aria-label="Предыдущая неделя" title="Предыдущая неделя">‹</button>
+          <div class="week-nav__label">
+            <strong id="weekRange">—</strong>
+            <span class="week-nav__hint" id="weekHint">—</span>
+          </div>
+          <button type="button" class="icon-btn" id="nextWeek" aria-label="Следующая неделя" title="Следующая неделя">›</button>
+          <button type="button" class="btn btn--ghost btn--sm" id="todayBtn">Сегодня</button>
+        </div>
+
+        <div class="filters" role="group" aria-label="Фильтр привычек">
+          <button type="button" class="chip is-active" data-filter="all" aria-pressed="true">
+            Все <span class="chip__count" data-count="all">0</span>
+          </button>
+          <button type="button" class="chip" data-filter="active" aria-pressed="false" title="Привычки, ещё не отмеченные сегодня">
+            Активные <span class="chip__count" data-count="active">0</span>
+          </button>
+          <button type="button" class="chip" data-filter="today" aria-pressed="false" title="Привычки, отмеченные сегодня">
+            Выполнено сегодня <span class="chip__count" data-count="today">0</span>
+          </button>
+        </div>
+      </div>
+
+      <p class="future-note" id="futureNote" hidden>
+        Это ещё не наступившая неделя — отметить выполнение можно только начиная с сегодняшнего дня.
+      </p>
+
+      <section class="panel week-overview" id="weekOverview" aria-label="Прогресс за выбранную неделю">
+        <div class="week-overview__head">
+          <div class="week-overview__info">
+            <h2 class="week-overview__title">Прогресс недели</h2>
+            <p class="week-overview__sub" id="weekOverviewSub">—</p>
+          </div>
+          <div class="week-overview__ring" id="weekOverviewRing" role="progressbar"
+               aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" data-pct="0"></div>
+        </div>
+        <div class="week-overview__bar" aria-hidden="true"></div>
+        <ul class="week-overview__legend" id="weekOverviewLegend"></ul>
+      </section>
+
+      <div class="stats" id="stats">
+        <article class="stat">
+          <span class="stat__label">Всего привычек</span>
+          <span class="stat__value" id="statTotal">0</span>
+        </article>
+        <article class="stat">
+          <span class="stat__label">Выполнено сегодня</span>
+          <span class="stat__value" id="statToday">0</span>
+        </article>
+        <article class="stat">
+          <span class="stat__label">Прогресс недели</span>
+          <span class="stat__value" id="statWeek">0%</span>
+        </article>
+        <article class="stat">
+          <span class="stat__label">Лучшая серия</span>
+          <span class="stat__value" id="statStreak">0</span>
+        </article>
+      </div>
+    </section>
+
+    <!-- Пустое состояние: нет ни одной привычки -->
+    <section class="empty-state" id="emptyState" hidden>
+      <div class="empty-state__icon" aria-hidden="true">🌱</div>
+      <h2 class="empty-state__title">Начните с одной привычки</h2>
+      <p class="empty-state__text">
+        Добавьте первое дело — например, «читать 20 минут» или «пить воду».
+        Отмечайте выполнение по дням и следите за серией.
+      </p>
+      <button type="button" class="btn btn--primary btn--lg" id="emptyAddBtn">Добавить первую привычку</button>
+    </section>
+
+    <!-- Список привычек -->
+    <section class="list-wrap" id="listWrap" hidden>
+      <ul class="habit-list" id="habitList"></ul>
+
+      <div class="empty-state empty-state--inline" id="listEmpty" hidden>
+        <div class="empty-state__icon" aria-hidden="true">🔍</div>
+        <h2 class="empty-state__title" id="listEmptyTitle">Ничего не найдено</h2>
+        <p class="empty-state__text" id="listEmptyText">Попробуйте изменить фильтр.</p>
+        <button type="button" class="btn btn--ghost" id="resetFilterBtn">Показать все привычки</button>
+      </div>
+    </section>
+
+    <footer class="footer">
+      Данные хранятся локально в вашем браузере (localStorage) и не отправляются на сервер.
+    </footer>
+  </main>
+
+  <!-- Модальное окно: создание / редактирование привычки -->
+  <div class="modal" id="habitModal" hidden>
+    <div class="modal__backdrop" data-close="habit"></div>
+    <div class="modal__panel" role="dialog" aria-modal="true" aria-labelledby="habitModalTitle">
+      <header class="modal__head">
+        <h2 id="habitModalTitle">Новая привычка</h2>
+        <button type="button" class="icon-btn" data-close="habit" aria-label="Закрыть окно" title="Закрыть">✕</button>
+      </header>
+
+      <form id="habitForm" novalidate>
+        <div class="field">
+          <label class="field__label" for="habitName">Название <span class="field__req">*</span></label>
+          <input class="input" id="habitName" name="name" type="text" maxlength="40"
+                 autocomplete="off" placeholder="Например: Читать 20 минут"
+                 required aria-describedby="nameError" />
+          <div class="field__row">
+            <p class="field__error" id="nameError" role="alert"></p>
+            <p class="field__counter" id="nameCounter">0 / 40</p>
+          </div>
+        </div>
+
+        <div class="field">
+          <label class="field__label" for="habitDesc">Описание <span class="field__hint">(необязательно)</span></label>
+          <textarea class="input" id="habitDesc" name="description" rows="3" maxlength="120"
+                    placeholder="Короткая заметка: зачем вам эта привычка"></textarea>
+          <p class="field__counter" id="descCounter">0 / 120</p>
+        </div>
+
+        <fieldset class="field field--fieldset">
+          <legend class="field__label">Цвет</legend>
+          <div class="swatches" id="colorSwatches"></div>
+        </fieldset>
+
+        <footer class="modal__foot">
+          <button type="button" class="btn btn--ghost" data-close="habit">Отмена</button>
+          <button type="submit" class="btn btn--primary" id="habitSubmitBtn">Сохранить</button>
+        </footer>
+      </form>
+    </div>
+  </div>
+
+  <!-- Модальное окно: подтверждение удаления -->
+  <div class="modal" id="confirmModal" hidden>
+    <div class="modal__backdrop" data-close="confirm"></div>
+    <div class="modal__panel modal__panel--sm" role="dialog" aria-modal="true" aria-labelledby="confirmTitle">
+      <header class="modal__head">
+        <h2 id="confirmTitle">Удалить привычку?</h2>
+      </header>
+      <div class="modal__body">
+        <p id="confirmText">Это действие нельзя отменить.</p>
+      </div>
+      <footer class="modal__foot">
+        <button type="button" class="btn btn--ghost" data-close="confirm">Отмена</button>
+        <button type="button" class="btn btn--danger" id="confirmDeleteBtn">Удалить</button>
+      </footer>
+    </div>
+  </div>
+
+  <!-- Плавающая кнопка «Добавить» (видна только на узких экранах) -->
+  <button type="button" class="fab" id="fabBtn" aria-label="Добавить привычку" title="Добавить привычку">＋</button>
+
+  <!-- Всплывающие уведомления -->
+  <div class="toasts" id="toasts" aria-live="polite" aria-atomic="false"></div>
+
+  <script src="script.js"></script>
+</body>
+</html>
